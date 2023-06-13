@@ -24,11 +24,13 @@ import GHC.Generics (Generic)
 
 import           Plutus.V2.Ledger.Api      (POSIXTime, PubKeyHash, Address (..), TxInfo (txInfoInputs), TxInInfo(txInInfoResolved),
                                             ScriptContext (scriptContextTxInfo), TxOut(txOutValue, txOutAddress), 
-                                            Validator, from, mkValidatorScript, txInfoSignatories, 
+                                            Validator, ValidatorHash, from, mkValidatorScript, txInfoSignatories, 
                                             UnsafeFromData (unsafeFromBuiltinData), 
                                             Credential (ScriptCredential))
 import           Plutus.V2.Ledger.Contexts (txSignedBy, valuePaidTo, findOwnInput, getContinuingOutputs, ownHash)
 import           Plutus.V1.Ledger.Value                             as ValueV1
+import Plutus.V1.Ledger.Address (scriptHashAddress)
+
 import qualified Prelude                   as Haskell
 -- import           PlutusTx.Prelude          (Bool, traceIfFalse, ($), (&&), Eq, Integer)
 
@@ -95,22 +97,17 @@ mkWrappedRequestValidator = wrap . mkSwapValidator -- (unsafeFromBuiltinData pkh
 
 validator :: ContractParam -> Validator
 validator cp = mkValidatorScript ($$(compile [|| mkWrappedRequestValidator ||]) `applyCode` liftCode cp)
-    
--- validatorHash :: ContractParam -> ValidatorHash
--- validatorHash = validatorHash . validator
 
--- address :: ContractParam -> Address
--- address = V1Address.scriptHashAddress . validatorHash
 -- {-# INLINABLE valuePaid #-}
 
 -- valuePaid :: ContractParam -> TxInfo -> Integer
 -- valuePaid pkh info = assetClassValueOf (valuePaidTo info pkh)
 
-saveVal :: ContractParam -> Haskell.IO ()
-saveVal cp = writeValidatorToFile "./assets/swap.plutus" $ validator cp
+-- saveVal :: ContractParam -> Haskell.IO ()
+-- saveVal cp = writeValidatorToFile "./assets/swap.plutus" $ validator cp
 
-vestingAddressBech32 :: ContractParam -> Network -> Haskell.String
-vestingAddressBech32 pkh network = validatorAddressBech32 network $ validator pkh
+-- swapAddressBech32 :: ContractParam -> Network -> Haskell.String
+-- swapAddressBech32 cp network = validatorAddressBech32 network $ validator cp
 
 -- printSwapDatumJSON :: ContractParam -> String -> IO ()
 -- printSwapDatumJSON pkh time = printDataToJSON $ SwapDatum
