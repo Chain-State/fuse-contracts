@@ -106,7 +106,7 @@ ${COLLATERAL_UTXO_ARAY} \
 --change-address=${FEE_ADDR} \
 --mint="$TOKEN_QUANTITY ${POLICY_ID}.${TOKEN_NAME_HEX}" \
 --mint-script-file ${SCRIPT_FILE} \
---mint-redeemer-file $WORK/plutus-scripts/${REDEEMER_FILE} \
+--mint-redeemer-file $WORK/datum/${REDEEMER_FILE} \
 --tx-in-collateral=${COLLATERAL_TX} \
 ${REQUIRED_SIGNER_ARRAY} \
 --protocol-params-file $WORK/transactions/pparams.json \

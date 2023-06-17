@@ -90,7 +90,6 @@ mkSwapValidator cp dat () ctx =  traceIfFalse "signedBySwaper: Not signed by Swa
       [_] -> True
       _   -> False
 
-
 {-# INLINABLE  mkWrappedRequestValidator #-}
 mkWrappedRequestValidator :: ContractParam -> BuiltinData -> BuiltinData -> BuiltinData -> ()
 mkWrappedRequestValidator = wrap . mkSwapValidator -- (unsafeFromBuiltinData pkh) -- (unsafeFromBuiltinData red)

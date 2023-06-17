@@ -37,7 +37,7 @@ $PREPROD_TESTNET \
 
 $CARDANO_CLI transaction sign \
 --tx-body-file $WORK/transactions/tx.draft \
---signing-key-file $BASE/.priv/wallets/${FROM_WALLET_NAME}/${FROM_WALLET_NAME}.skey \
+--signing-key-file $BASE/.priv/wallets/${FROM_WALLET_NAME}/${FROM_WALLET_NAME}.payment.skey \
 --out-file $WORK/transactions/tx.signed
 
 $CARDANO_CLI transaction submit --tx-file $WORK/transactions/tx.signed $PREPROD_TESTNET

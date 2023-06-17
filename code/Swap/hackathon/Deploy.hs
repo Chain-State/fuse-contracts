@@ -22,15 +22,15 @@ import qualified Data.Text.Lazy.IO   as LT
 import qualified SwapOnChain            as OnChain
 import qualified FTokens                as FTokens
 
--- import qualified Ledger.Ada               as Ada
+import           Utilities                 (writePolicyToFile)
 
-main :: IO()
+main :: IO ()
 main = do
     writeInitDatum
     writeContractDatum
 
     _ <- writeSwapValidatorScript
-    _ <- writeTokensValidatorScript
+    _ <- saveSignedPolicy
 
     -- fileContents <- readJSON $ basePath++"borrow-request-redeemer.json"
     -- print fileContents
@@ -97,7 +97,7 @@ swapDatum =  1_000
 
 contractParams :: OnChain.ContractParam
 contractParams =  OnChain.ContractParam {   
-    OnChain.swaper = LedgerApiV2.PubKeyHash "329fa233c51fc91902e045ddab1c539aac278a078a6218991c8b11ca ",
+    OnChain.swaper = LedgerApiV2.PubKeyHash "b2089d44c9fc3ce37cd446b2441d5c039b4687c5836b1a2ecb8f1553 ",
     OnChain.tokenCs = LedgerApiV2.CurrencySymbol "",
     OnChain.tokenTn = LedgerApiV2.TokenName ""
 }
@@ -105,5 +105,9 @@ contractParams =  OnChain.ContractParam {
 writeSwapValidatorScript :: IO (Either (FileError ()) ())
 writeSwapValidatorScript =  writeValidator (basePath++"plutus-scripts/Swap.plutus") $ OnChain.validator contractParams
 
-writeTokensValidatorScript :: IO (Either (FileError ()) ())
-writeTokensValidatorScript =  writeMintingValidator (basePath++"plutus-scripts/FTokens-Policy.plutus") $ FTokens.signedPolicy $ LedgerApiV2.PubKeyHash "6dde623cf9cccc589d33172139ba09fa8274c962ea3b6521d084cfc9"
+-- writeTokensValidatorScript :: IO (Either (FileError ()) ())
+-- writeTokensValidatorScript =  writeMintingValidator (basePath++"plutus-scripts/FTokens.plutus") $ FTokens.signedPolicy 
+--     $ LedgerApiV2.PubKeyHash "eb8484d58f0dabda41b3497db0de4eac82dce04ac5791d6ae96a640c"
+
+saveSignedPolicy :: IO ()
+saveSignedPolicy = writePolicyToFile (basePath++"plutus-scripts/ftokens.plutus") (FTokens.signedPolicy $ LedgerApiV2.PubKeyHash "eb8484d58f0dabda41b3497db0de4eac82dce04ac5791d6ae96a640c")

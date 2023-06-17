@@ -2,9 +2,9 @@
 
 # Generic
 BASE=~/dev/cardano/plutus/fuse-contracts
-export WORK=$BASE/scripts
+export WORK=$BASE/code/Swap/assets
 export CARDANO_CLI=cardano-cli
-# export TESTNET_MAGIC=2
+export TESTNET_MAGIC=1
 # Loading keys
 export FOR_PLUTUS_VKEY=$BASE/.priv/wallets/forPlutus/forPlutus.payment.vkey
 export FOR_PLUTUS_SKEY=$BASE/.priv/wallets/forPlutus/forPlutus.payment.skey

@@ -12,7 +12,7 @@ set -o pipefail
 
 # Define export variables
 export BASE=~/dev/cardano/plutus/fuse-contracts
-export WORK=$BASE/shell-scripts
+export WORK=$BASE/code/Swap/assets
 
 # PROJECT_ID is for blockfrost datum query, get your account here
 # https://blockfrost.io/
