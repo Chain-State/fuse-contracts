@@ -12,6 +12,8 @@ import           Data.Aeson.Text       (encodeToLazyText)
 
 import qualified Data.ByteString.Lazy                as LBS
 import qualified Data.ByteString.Short               as SBS
+import qualified Data.String               as S
+
 import qualified Plutus.V2.Ledger.Api                as LedgerApiV2
 import qualified PlutusTx
 -- import qualified Ledger
@@ -107,7 +109,13 @@ writeSwapValidatorScript =  writeValidator (basePath++"plutus-scripts/Swap.plutu
 
 -- writeTokensValidatorScript :: IO (Either (FileError ()) ())
 -- writeTokensValidatorScript =  writeMintingValidator (basePath++"plutus-scripts/FTokens.plutus") $ FTokens.signedPolicy 
---     $ LedgerApiV2.PubKeyHash "eb8484d58f0dabda41b3497db0de4eac82dce04ac5791d6ae96a640c"
+--     $ LedgerApiV2.PubKeyHash "b3230d55717ed8af49b9bd973e326c7a82a46f8457f3a49c53f562dd"
+
+pubkeyhash :: LedgerApiV2.PubKeyHash
+pubkeyhash = LedgerApiV2.PubKeyHash $ LedgerApiV2.getLedgerBytes $ S.fromString "b3230d55717ed8af49b9bd973e326c7a82a46f8457f3a49c53f562dd"
 
 saveSignedPolicy :: IO ()
-saveSignedPolicy = writePolicyToFile (basePath++"plutus-scripts/ftokens.plutus") (FTokens.signedPolicy $ LedgerApiV2.PubKeyHash "eb8484d58f0dabda41b3497db0de4eac82dce04ac5791d6ae96a640c")
+saveSignedPolicy = writePolicyToFile (basePath++"plutus-scripts/ftokens.plutus") $ FTokens.signedPolicy pubkeyhash
+
+-- saveSignedPolicy :: IO ()
+-- saveSignedPolicy = writePolicyToFile (basePath++"plutus-scripts/ftokens.plutus") $ FTokens.signedPolicy pubkeyhash

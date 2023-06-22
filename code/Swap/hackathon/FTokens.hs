@@ -34,11 +34,11 @@ signedPolicy pkh = mkMintingPolicyScript $ signedCode `PlutusTx.applyCode` Plutu
 ---------------------------------------------------------------------------------------------------
 ------------------------------------- HELPER FUNCTIONS --------------------------------------------
 
--- saveSignedCode :: IO ()
--- saveSignedCode = writeCodeToFile "assets/ftokens.plutus" signedCode
+saveSignedCode :: IO ()
+saveSignedCode = writeCodeToFile "assets/ftokens.plutus" signedCode
 
--- saveSignedPolicy :: PubKeyHash -> IO ()
--- saveSignedPolicy pkh = writePolicyToFile (printf "assets/ftokens.plutus" $ show pkh) $ signedPolicy pkh
+saveSignedPolicy :: PubKeyHash -> IO ()
+saveSignedPolicy pkh = writePolicyToFile (printf "assets/ftokens-%s.plutus" $ show pkh) $ signedPolicy pkh
 
 signedCurrencySymbol :: PubKeyHash -> CurrencySymbol
 signedCurrencySymbol = currencySymbol . signedPolicy
