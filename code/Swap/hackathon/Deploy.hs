@@ -24,12 +24,13 @@ import qualified Data.Text.Lazy.IO   as LT
 import qualified SwapOnChain            as OnChain
 import qualified FTokens                as FTokens
 
-import           Utilities                 (writePolicyToFile)
+import           Utilities                 (writeCodeToFile, writePolicyToFile, writeValidatorToFile)
 
 main :: IO ()
 main = do
     writeInitDatum
     writeContractDatum
+    writeSwapRedeemer
 
     _ <- writeSwapValidatorScript
     _ <- saveSignedPolicy
@@ -56,6 +57,9 @@ dataToScriptData (LedgerApiV2.B bs)        = ScriptDataBytes bs
 writeJSON :: PlutusTx.ToData a => FilePath -> a -> IO ()
 writeJSON file = LBS.writeFile file . DataAeson.encode . scriptDataToJson ScriptDataJsonDetailedSchema . dataToScriptData . PlutusTx.toData
 
+writeJSONFromPlutus :: PlutusTx.ToData a => FilePath -> a -> IO ()
+writeJSONFromPlutus file = LBS.writeFile file . DataAeson.encode . scriptDataToJson ScriptDataJsonDetailedSchema . fromPlutusData . LedgerApiV2.toData 
+
 writeValidator :: FilePath -> LedgerApiV2.Validator -> IO (Either (FileError ()) ())
 writeValidator file = writeFileTextEnvelope @(PlutusScript PlutusScriptV2) file Nothing . PlutusScriptSerialised . SBS.toShort . LBS.toStrict . serialise . LedgerApiV2.unValidatorScript
 
@@ -65,6 +69,11 @@ writeMintingValidator file = writeFileTextEnvelope @(PlutusScript PlutusScriptV2
 writeInitDatum :: IO ()
 writeInitDatum = writeJSON (basePath++"datum/unit.json") ()
 
+writeSwapRedeemer :: IO ()
+writeSwapRedeemer = 
+    let red = LedgerApiV2.Redeemer $ PlutusTx.toBuiltinData () 
+    in writeJSONFromPlutus (basePath++"redeemer/swap-redeemer.json") red 
+
 readJSON :: FilePath -> IO LBS.ByteString
 readJSON = LBS.readFile
 
@@ -72,7 +81,7 @@ writeContractDatum :: IO ()
 writeContractDatum = 
     let contributor = swapDatum
         d = PlutusTx.toBuiltinData contributor
-    in writeJSON (basePath++"datum/swap-datum.json") d
+    in writeJSONFromPlutus (basePath++"datum/swap-datum.json") d
 
 -- Virtual Fixed Ada price based on the 
 -- Average high and low Ada USD price of all time.
@@ -83,12 +92,16 @@ minAdaValue = 0.487209213
 currentAdaValue :: Double
 currentAdaValue = 0.377838
 
-swapAmount :: Integer -> Integer
-swapAmount i = i
+-- swapAmount :: Integer -> Integer
+-- swapAmount i = i
 
-swapDatum :: Integer
-swapDatum =  1_000
+lockDatum :: Integer
+lockDatum =  1_000
 
+swapDatum :: OnChain.SwapDatum
+swapDatum =  OnChain.SwapDatum {   
+    OnChain.lockDat = lockDatum
+}
 -- fTokensCs :: LedgerApiV2.CurrencySymbol
 -- fTokensCs = FTokens.signedCurrencySymbol fTokensParams
 
@@ -97,22 +110,25 @@ swapDatum =  1_000
 --     FTokens.beneficiary = LedgerApiV2.PubKeyHash "6dde623cf9cccc589d33172139ba09fa8274c962ea3b6521d084cfc9"
 -- }./
 
+swapPubkeyhash :: LedgerApiV2.PubKeyHash
+swapPubkeyhash = LedgerApiV2.PubKeyHash $ LedgerApiV2.getLedgerBytes $ S.fromString "b2089d44c9fc3ce37cd446b2441d5c039b4687c5836b1a2ecb8f1553"
+
 contractParams :: OnChain.ContractParam
 contractParams =  OnChain.ContractParam {   
-    OnChain.swaper = LedgerApiV2.PubKeyHash "b2089d44c9fc3ce37cd446b2441d5c039b4687c5836b1a2ecb8f1553 ",
+    OnChain.swaper = swapPubkeyhash,
     OnChain.tokenCs = LedgerApiV2.CurrencySymbol "",
-    OnChain.tokenTn = LedgerApiV2.TokenName ""
+    OnChain.tokenTn = LedgerApiV2.TokenName "",
+    OnChain.swapAmnt = 15000000
 }
 
-writeSwapValidatorScript :: IO (Either (FileError ()) ())
-writeSwapValidatorScript =  writeValidator (basePath++"plutus-scripts/Swap.plutus") $ OnChain.validator contractParams
-
--- writeTokensValidatorScript :: IO (Either (FileError ()) ())
--- writeTokensValidatorScript =  writeMintingValidator (basePath++"plutus-scripts/FTokens.plutus") $ FTokens.signedPolicy 
---     $ LedgerApiV2.PubKeyHash "b3230d55717ed8af49b9bd973e326c7a82a46f8457f3a49c53f562dd"
+writeSwapValidatorScript :: IO ()
+writeSwapValidatorScript =  writeValidatorToFile (basePath++"plutus-scripts/swap.plutus") $ OnChain.validator contractParams
 
 pubkeyhash :: LedgerApiV2.PubKeyHash
-pubkeyhash = LedgerApiV2.PubKeyHash $ LedgerApiV2.getLedgerBytes $ S.fromString "b3230d55717ed8af49b9bd973e326c7a82a46f8457f3a49c53f562dd"
+pubkeyhash = LedgerApiV2.PubKeyHash $ LedgerApiV2.getLedgerBytes $ S.fromString "eb8484d58f0dabda41b3497db0de4eac82dce04ac5791d6ae96a640c"
+
+saveSwapLucidCode :: IO ()
+saveSwapLucidCode = writeCodeToFile (basePath++"plutus-scripts/swap-lucid.plutus") OnChain.validatorCode
 
 saveSignedPolicy :: IO ()
 saveSignedPolicy = writePolicyToFile (basePath++"plutus-scripts/ftokens.plutus") $ FTokens.signedPolicy pubkeyhash

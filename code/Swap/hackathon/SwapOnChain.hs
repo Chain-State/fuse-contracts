@@ -17,6 +17,7 @@ module SwapOnChain
   ( SwapDatum (..)
   , ContractParam (..)
   , validator
+  , validatorCode
   ) where
 
 -- import           Data.Aeson           (ToJSON, FromJSON)
@@ -34,15 +35,16 @@ import Plutus.V1.Ledger.Address (scriptHashAddress)
 import qualified Prelude                   as Haskell
 -- import           PlutusTx.Prelude          (Bool, traceIfFalse, ($), (&&), Eq, Integer)
 
-import           PlutusTx                  (compile, applyCode, liftCode, unstableMakeIsData, makeLift, toBuiltinData)
+import           PlutusTx                  (CompiledCode, compile, applyCode, liftCode, unstableMakeIsData, makeLift, toBuiltinData)
 import           PlutusTx.Prelude           hiding (Semigroup(..), unless)
 import           Utilities                 (Network, posixTimeFromIso8601,
                                             printDataToJSON,
                                             validatorAddressBech32, wrap,
                                             writeValidatorToFile)
+import qualified Data.String               as S
 
 data SwapDatum = SwapDatum {
-    swapAmnt  :: Integer -- Amount they are swapping
+    lockDat  :: Integer -- Datum to Lock and Unlock tokens
   } deriving (Haskell.Show, Generic)
 
 unstableMakeIsData ''SwapDatum 
@@ -50,7 +52,8 @@ unstableMakeIsData ''SwapDatum
 data ContractParam = ContractParam {
     swaper    :: PubKeyHash, -- Who is swapping
     tokenCs   :: CurrencySymbol, 
-    tokenTn   :: TokenName 
+    tokenTn   :: TokenName,
+    swapAmnt  :: Integer -- Amount they are swapping
  } deriving (Haskell.Show)
 
 unstableMakeIsData ''ContractParam -- This is to instantiate the IsData class
@@ -58,7 +61,7 @@ makeLift ''ContractParam
     
 {-# INLINABLE mkSwapValidator #-}
 mkSwapValidator :: ContractParam -> SwapDatum -> () -> ScriptContext -> Bool
-mkSwapValidator cp dat () ctx =  traceIfFalse "signedBySwaper: Not signed by Swaper" signedBySwaper  &&
+mkSwapValidator cp dat () ctx =  traceIfFalse "signedBySwaper: Not signed by Swaper" signedBySwaper &&
   traceIfFalse "outputToSwaper: You have to pay the owner!" outputToSwaper &&
   traceIfFalse "consumeOnlyOneOutput: You can only consume one script UTxO per Tx!" consumeOnlyOneOutput
   where
@@ -70,7 +73,7 @@ mkSwapValidator cp dat () ctx =  traceIfFalse "signedBySwaper: Not signed by Swa
 
     outputToSwaper :: Bool
     outputToSwaper = 
-          valuePaidTo info (swaper cp) == singleton (tokenCs cp) (tokenTn cp) (swapAmnt dat)
+          valuePaidTo info (swaper cp) == singleton (tokenCs cp) (tokenTn cp) (swapAmnt cp)
 
     allInputs :: [TxInInfo]
     allInputs = txInfoInputs info 
@@ -96,6 +99,41 @@ mkWrappedRequestValidator = wrap . mkSwapValidator -- (unsafeFromBuiltinData pkh
 
 validator :: ContractParam -> Validator
 validator cp = mkValidatorScript ($$(compile [|| mkWrappedRequestValidator ||]) `applyCode` liftCode cp)
+
+----------------------------------------------------------------------------------------------------------------
+---------------------------------------------------LUCID CODE---------------------------------------------------
+
+{-# INLINABLE  mkWrappedValidatorLucid #-}
+--                            swapper          CS           TN           Amount          dat           redeemer         context
+mkWrappedValidatorLucid :: BuiltinData ->  BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ()
+mkWrappedValidatorLucid pkh cs tn amnt = wrap $ mkSwapValidator cp
+    where
+        cp = ContractParam
+            { swaper = unsafeFromBuiltinData pkh
+            , tokenCs = unsafeFromBuiltinData cs
+            , tokenTn = unsafeFromBuiltinData tn 
+            , swapAmnt = unsafeFromBuiltinData amnt 
+            }
+
+validatorCode :: CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ())
+validatorCode = $$( compile [|| mkWrappedValidatorLucid ||])
+
+---------------------------------------------------------------------------------------------------
+------------------------------------- SAVE VALIDATOR -------------------------------------------
+
+-- saveOracleCode :: IO ()
+-- saveOracleCode = writeCodeToFile "assets/oracle.plutus" validatorCode
+
+-- saveOracleScript :: String -> PubKeyHash -> IO ()
+-- saveOracleScript symbol pkh = do
+--     let
+--     writeValidatorToFile fp $ validator op
+--     where
+--         op = OracleParams
+--             { oNFT= parseToken symbol
+--             , oOperator   = pkh
+--             }
+--         fp = printf "assets/oracle-%s-%s.plutus" (take 3 (show pkh)) $ take 3 (show pkh)
 
 -- {-# INLINABLE valuePaid #-}
 
