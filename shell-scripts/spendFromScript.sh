@@ -152,11 +152,11 @@ case $input in
         --tx-in ${SCRIPT_UTXO} \
         --spending-tx-in-reference ${WITNESS_TX} \
         --spending-plutus-script-v2 \
-        --spending-reference-tx-in-datum-file $WORK/plutus-scripts/${DATUM_HASH_FILE} \
-        --spending-reference-tx-in-redeemer-file $WORK/plutus-scripts/${REDEEMER_FILE} \
+        --spending-reference-tx-in-datum-file $WORK/datum/${DATUM_HASH_FILE} \
+        --spending-reference-tx-in-redeemer-file $WORK/redeemer/${REDEEMER_FILE} \
         --tx-in ${COLLATERAL_TX} \
         --tx-in-collateral=${COLLATERAL_TX} \
-        --tx-out ${TO_WALLET_ADDRESS}+${PAYMENT} \
+        --tx-out ${SCRIPT_ADDRESS}+${PAYMENT} \
         ${TO_WALLET_NAME_ARRAY} \
         ${REQUIRED_SIGNER_ARRAY} \
         --protocol-params-file $WORK/transactions/pparams.json \
@@ -171,11 +171,11 @@ case $input in
         --change-address=${FEE_ADDR} \
         --tx-in ${SCRIPT_UTXO} \
         --tx-in-script-file ${SCRIPT_FILE} \
-        --tx-in-datum-file $WORK/plutus-scripts/${DATUM_HASH_FILE} \
-        --tx-in-redeemer-file $WORK/plutus-scripts/${REDEEMER_FILE} \
+        --tx-in-datum-file $WORK/datum/${DATUM_HASH_FILE} \
+        --tx-in-redeemer-file $WORK/redeemer/${REDEEMER_FILE} \
         --tx-in ${COLLATERAL_TX} \
         --tx-in-collateral=${COLLATERAL_TX} \
-        --tx-out ${TO_WALLET_ADDRESS}+${PAYMENT} \
+        --tx-out ${SCRIPT_ADDRESS}+${PAYMENT} \
         ${TO_WALLET_NAME_ARRAY} \
         ${REQUIRED_SIGNER_ARRAY} \
         --protocol-params-file $WORK/transactions/pparams.json \

@@ -31,7 +31,7 @@ read -p 'Datum hash file name: ' DATUM_HASH_FILE
 build=($CARDANO_CLI transaction build \
 --tx-in ${FROM_UTXO} \
 --tx-out ${SCRIPT_ADDRESS}+${LOVELACE_TO_SEND} \
---tx-out-datum-hash-file $WORK/plutus-scripts/${DATUM_HASH_FILE} \
+--tx-out-datum-hash-file $WORK/datum/${DATUM_HASH_FILE} \
 --change-address=${FROM_WALLET_ADDRESS} \
 --testnet-magic ${TESTNET_MAGIC}  \
 --out-file $WORK/transactions/tx.draft \

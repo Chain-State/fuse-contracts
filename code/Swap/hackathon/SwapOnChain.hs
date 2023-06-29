@@ -24,16 +24,17 @@ module SwapOnChain
 import GHC.Generics (Generic)
 
 import           Plutus.V2.Ledger.Api      (POSIXTime, PubKeyHash, Address (..), TxInfo (txInfoInputs), TxInInfo(txInInfoResolved),
-                                            ScriptContext (scriptContextTxInfo), TxOut(txOutValue, txOutAddress), 
-                                            Validator, ValidatorHash, from, mkValidatorScript, txInfoSignatories, 
-                                            UnsafeFromData (unsafeFromBuiltinData), 
+                                            ScriptContext (scriptContextTxInfo), TxOut(txOutValue, txOutAddress), singleton,
+                                            Validator, ValidatorHash, from, mkValidatorScript, txInfoSignatories, Value,  
+                                            UnsafeFromData (unsafeFromBuiltinData), adaSymbol, adaToken, 
                                             Credential (ScriptCredential))
 import           Plutus.V2.Ledger.Contexts (txSignedBy, valuePaidTo, findOwnInput, getContinuingOutputs, ownHash)
-import           Plutus.V1.Ledger.Value                             as ValueV1
+import           Plutus.V1.Ledger.Value    (CurrencySymbol, TokenName, assetClassValue, assetClass)
+import qualified Plutus.V1.Ledger.Value as V1 
 import Plutus.V1.Ledger.Address (scriptHashAddress)
 
 import qualified Prelude                   as Haskell
--- import           PlutusTx.Prelude          (Bool, traceIfFalse, ($), (&&), Eq, Integer)
+import           PlutusTx.Prelude          (Bool, traceIfFalse, ($), (&&), Eq, Integer, (==))
 
 import           PlutusTx                  (CompiledCode, compile, applyCode, liftCode, unstableMakeIsData, makeLift, toBuiltinData)
 import           PlutusTx.Prelude           hiding (Semigroup(..), unless)
@@ -62,7 +63,7 @@ makeLift ''ContractParam
 {-# INLINABLE mkSwapValidator #-}
 mkSwapValidator :: ContractParam -> SwapDatum -> () -> ScriptContext -> Bool
 mkSwapValidator cp dat () ctx =  traceIfFalse "signedBySwaper: Not signed by Swaper" signedBySwaper &&
-  traceIfFalse "outputToSwaper: You have to pay the owner!" outputToSwaper &&
+  traceIfFalse "outputToSwaper: You have to pay the swapper!" outputToSwaper &&
   traceIfFalse "consumeOnlyOneOutput: You can only consume one script UTxO per Tx!" consumeOnlyOneOutput
   where
     info :: TxInfo
@@ -71,9 +72,21 @@ mkSwapValidator cp dat () ctx =  traceIfFalse "signedBySwaper: Not signed by Swa
     signedBySwaper :: Bool
     signedBySwaper = txSignedBy info $ swaper cp
 
+    val :: Value
+    val = valuePaidTo info (swaper cp)
+
+    num :: Integer
+    num = 15000000
+
+    asset :: V1.AssetClass
+    asset = assetClass adaSymbol adaToken
+
+    val2 :: Value
+    val2 = assetClassValue asset num
+
     outputToSwaper :: Bool
-    outputToSwaper = 
-          valuePaidTo info (swaper cp) == singleton (tokenCs cp) (tokenTn cp) (swapAmnt cp)
+    outputToSwaper = val == val2
+          -- valuePaidTo info (swaper cp) == singleton (tokenCs cp) (tokenTn cp) (swapAmnt cp)
 
     allInputs :: [TxInInfo]
     allInputs = txInfoInputs info 

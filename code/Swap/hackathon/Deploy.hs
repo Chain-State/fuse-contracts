@@ -118,7 +118,7 @@ contractParams =  OnChain.ContractParam {
     OnChain.swaper = swapPubkeyhash,
     OnChain.tokenCs = LedgerApiV2.CurrencySymbol "",
     OnChain.tokenTn = LedgerApiV2.TokenName "",
-    OnChain.swapAmnt = 15000000
+    OnChain.swapAmnt = 15_000_000
 }
 
 writeSwapValidatorScript :: IO ()
